@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Data{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/data.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='js/jquery-3.4.1.min.js') }}">
+
+{% endblock %}
+
+{% block main %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message[0] }} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <li>{{ message[1] }}</li>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div class="form-container"  style="margin: 20px">
+        <form name="form1" action="/testlinemanagement/" enctype='multipart/form-data' method="POST">
+            <div class="row pre testline" style="overflow-y:auto; overflow-x:auto; width:1400px; height:700px;">
+                <table class="table table-striped">
+                    <tr>
+                        <th>ID</th>
+                        <th>Testline Name</th>
+                        <th>Control PC IP</th>
+                        <th>PC Account</th>
+                        <th>PC Password</th>
+                        <th>Owner</th>
+                        <th>BTS_ID</th>
+                        <th>MPlane IP</th>
+                        <th>HW Infor</th>
+                        <th>Register</th>
+                        <th>Update Time</th>
+                        <th>
+                            操作
+                            <button type="button" class="btn btn-primary addSub input-sm2">Add</button>
+                        </th>
+                    </tr>
+                    {% for testline  in testlines %}
+                        <tr>
+                            <td class="testline_id">{{ testline.id }}</td>
+                            <td class="testlinename">{{ testline.test_line_name }}</td>
+                            <td class="controlpcip">{{ testline.control_pc_ip }}</td>
+                            <td class="pcaccount">{{ testline.pc_account }}</td>
+                            <td class="pcpasswd">{{ testline.pc_pwd }}</td>
+                            <td class="owner">{{ testline.owner_name }}</td>
+                            <td class="btsid">{{ testline.bts_id }}</td>
+                            <td class="mplaneip">{{ testline.mplane_ip }}</td>
+                            <td class="hwinfo">{{ testline.hw_infor }}</td>
+                            <td class="user_name" >{{ testline.user_name }}</td>
+                            <td class="update_time">{{ testline.update_time }}</td>
+                            <td class="action">
+                                <button type="button" class="btn btn-primary edit input-sm2">Edit</button>
+                                <button type="button" class="btn btn-danger delSub input-sm2">Del</button>
+                                <button type="button" class="btn btn-success pwrOff input-sm2">Off</button>
+                                <button type="button" class="btn btn-info pwrOn input-sm2">On</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </form>
+    </div>
+    <div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        var newtestline = "<tr>\n" +
+            "<td class=\"testline_id\"></td>\n" +
+            "<td class=\"testlinename\"><input type=\"text\" class=\"input_testlinename input-sm2\" placeholder=\"input testline name\" name=\"testlinename\" >\n</td>\n" +
+            "<td class=\"controlpcip\"><input type=\"text\" class=\"input_controlpcip input-sm2\" placeholder=\"input control pc ip\" name=\"controlpcip\" >\n</td>\n" +
+            "<td class=\"pcaccount\"><input type=\"text\" class=\"input_pcaccount input-sm2\" placeholder=\"input control pc account\" name=\"pcaccount\" >\n</td>\n" +
+            "<td class=\"pcpasswd\"><input type=\"text\" class=\"input_pcpasswd input-sm2\" placeholder=\"input control pc password\" name=\"pcpasswd\" >\n</td>\n" +
+            "<td class=\"owner\"><input type=\"text\" class=\"input_owner input-sm2\" placeholder=\"input owner name\" name=\"owner\" >\n</td>\n" +
+            "<td class=\"btsid\"><input type=\"text\" class=\"input_btsid input-sm2\" placeholder=\"input btsid\" name=\"btsid\" >\n</td>\n" +
+            "<td class=\"mplaneip\"><input type=\"text\" class=\"input_mplaneip input-sm2\" placeholder=\"input mplane ip\" name=\"mplaneip\" >\n</td>\n" +
+            "<td class=\"hwinfor\"><input type=\"text\" class=\"input_hwinfor input-sm2\" placeholder=\"input hw infor\" name=\"hwinfor\" >\n</td>\n" +
+            "<td class=\"user_name\"></td>\n" +
+            "<td class=\"update_time\"></td>\n" +
+            "<td class=\"action\">\n" +
+            "<button type=\"button\" class=\"btn btn-primary save input-sm2\" name=\"savetestline\" id=\"savetestline\">Save</button>\n" +
+            "<button type=\"button\" class=\"btn btn-danger delSub input-sm2\">Del</button>\n" +
+            "</td>\n" +
+            "</tr>";
+
+        $(".testline").on("click",".addSub",function(){
+            $(newtestline).insertAfter($(this).parents('tr').first());
+        });
+
+        $('.testline').on('click','.delSub', function(){
+            var postdata = {
+                'testline_id':$(this).parents('td').siblings().first().text()
+            }
+            $.ajax({
+                type: "post",
+                url: '/deltestline/',
+                data:postdata,
+                dataType: 'json',
+                success: function (data) {
+                    window.location.href="/testlinemanagement/";
+                    alert(data["message"])
+                }
+            });
+        });
+
+        $('.testline').on('click','.edit', function(){
+            var cr_testlineid = $(this).parent().siblings('.testline_id').text();
+            var cr_testlinename = $(this).parent().siblings('.testlinename').text();
+            var cr_controlpcip = $(this).parent().siblings('.controlpcip').text();
+            var cr_pcaccount = $(this).parent().siblings('.pcaccount').text();
+            var cr_pcpasswd = $(this).parent().siblings('.pcpasswd').text();
+            var cr_owner = $(this).parent().siblings('.owner').text();
+            var cr_btsid = $(this).parent().siblings('.btsid').text();
+            var cr_mplaneip = $(this).parent().siblings('.mplaneip').text();
+            var cr_hwinfor = $(this).parent().siblings('.hwinfo').text();
+            var edittestline = "<tr>\n" +
+                "<td class=\"testline_id\">" + cr_testlineid + "</td>\n" +
+                "<td class=\"testlinename\"><input type=\"text\" class=\"input_testlinename input-sm2\" placeholder=\"input testline name\" name=\"testlinename\" value=\""+cr_testlinename+"\">\n</td>\n" +
+                "<td class=\"controlpcip\"><input type=\"text\" class=\"input_controlpcip input-sm2\" placeholder=\"input control pc ip\" name=\"controlpcip\" value=\""+cr_controlpcip+"\">\n</td>\n" +
+                "<td class=\"pcaccount\"><input type=\"text\" class=\"input_pcaccount input-sm2\" placeholder=\"input control pc account\" name=\"pcaccount\" value=\""+cr_pcaccount+"\">\n</td>\n" +
+                "<td class=\"pcpasswd\"><input type=\"text\" class=\"input_pcpasswd input-sm2\" placeholder=\"input control pc password\" name=\"pcpasswd\" value=\""+cr_pcpasswd+"\">\n</td>\n" +
+                "<td class=\"owner\"><input type=\"text\" class=\"input_owner input-sm2\" placeholder=\"input owner name\" name=\"owner\" value=\""+cr_owner+"\">\n</td>\n" +
+                "<td class=\"btsid\"><input type=\"text\" class=\"input_btsid input-sm2\" placeholder=\"input btsid\" name=\"btsid\" value=\""+cr_btsid+"\">\n</td>\n" +
+                "<td class=\"mplaneip\"><input type=\"text\" class=\"input_mplaneip input-sm2\" placeholder=\"input mplane ip\" name=\"mplaneip\" value=\""+cr_mplaneip+"\">\n</td>\n" +
+                "<td class=\"hwinfor\"><input type=\"text\" class=\"input_hwinfor input-sm2\" placeholder=\"input hw infor\" name=\"hwinfor\" value=\""+cr_hwinfor+"\">\n</td>\n" +
+                "<td class=\"user_name\"></td>\n" +
+                "<td class=\"update_time\"></td>\n" +
+                "<td class=\"action\">\n" +
+                "<button type=\"button\" class=\"btn btn-primary update input-sm2\" name=\"savetestline\" id=\"savetestline\">Save</button>\n" +
+                "<button type=\"button\" class=\"btn btn-danger delSub input-sm2\">Del</button>\n" +
+                "</td>\n" +
+                "</tr>";
+            $(edittestline).insertAfter($(this).parents('tr').first());
+            $(this).parents('tr').first().remove();
+        });
+
+        $(".testline").on("click",".save",function(){
+            alert($(".input_hwinfor").val());
+            var postdata = {
+                'testline_name': $(".input_testlinename").val(),
+                'controlpc_ip': $(".input_controlpcip").val(),
+                'pc_account': $(".input_pcaccount").val(),
+                'pc_password': $(".input_pcpasswd").val(),
+                'owner_name': $(".input_owner").val(),
+                'btsid': $(".input_btsid").val(),
+                'mplane_ip': $(".input_mplaneip").val(),
+                'hwinfor': $(".input_hwinfor").val()
+            };
+
+            $.ajax({
+                type: "post",
+                url: '/testlinemanagement/',
+                data:postdata,
+                dataType: 'json',
+                success: function (data) {
+                    window.location.href="/testlinemanagement/";
+                    alert(data["message"])
+                }
+            });
+        });
+
+        $(".testline").on("click",".update",function(){
+            var postdata = {
+                'testline_id': $(this).parent().siblings('.testline_id').text(),
+                'testline_name': $(".input_testlinename").val(),
+                'controlpc_ip': $(".input_controlpcip").val(),
+                'pc_account': $(".input_pcaccount").val(),
+                'pc_password': $(".input_pcpasswd").val(),
+                'owner_name': $(".input_owner").val(),
+                'btsid': $(".input_btsid").val(),
+                'mplane_ip': $(".input_mplaneip").val(),
+                'hwinfor': $(".input_hwinfor").val()
+            };
+            $.ajax({
+                type: "post",
+                url: '/updatetestline/',
+                data:postdata,
+                dataType: 'json',
+                success: function (data) {
+                    window.location.href="/testlinemanagement/";
+                    alert(data["message"])
+                }
+            });
+        });
+    </script>
+{% endblock %}
